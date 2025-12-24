@@ -29,33 +29,26 @@ MENU = {
     }
 }
 
+resources = {
+    "water": 300,
+    "milk": 200,
+    "coffee": 100,
+}
 
 #Menu
 
-def print_report(current_water, current_milk, current_coffee, current_money):
-    print(f"Water:{current_water}\n"
-            f"Milk:{current_milk}\n"
-            f"Coffee:{current_coffee}\n"
-            f"Money:{current_money}\n")
+def print_report():
+    print(f"Water: {resources["water"]}\n"
+            f"Milk:{resources["milk"]}\n"
+            f"Coffee:{resources["coffee"]}\n"
+            f"Money:{profit}\n")
 
-def check_resources(current_water, current_milk, current_coffee, order):
-    if order == "espresso":
-        if current_water >= 50 and current_coffee >= 18:
-            return True
-        else:
+def check_resources(order):
+    for item in order["ingredients"]:
+        if order["ingredients"][item] > resources[item]:
+            print(f"Sorry there is not enough {item}.")
             return False
-    elif order == "latte":
-        if current_water >= 200 and current_coffee >= 24 and current_milk >= 150:
-            return True
-        else:
-            return False
-    elif order == "cappuccino":
-        if current_water >= 250 and current_coffee >= 24 and current_milk >= 100:
-            return True
-        else:
-            return False
-    else:
-        return -1
+    return True
 
 def coin_process(quater_given,dimes_given,nickel_given,pennies_given):
     cal_quater_given = quater_given * 0.25
@@ -65,23 +58,9 @@ def coin_process(quater_given,dimes_given,nickel_given,pennies_given):
     total_amount = cal_quater_given + cal_dimes_given + cal_nickel_given + cal_pennies_given
     return total_amount
 
-def make_coffee(current_water, current_milk, current_coffee,order):
-        if order == "espresso":
-            current_water -= 50
-            current_coffee -= 18
-            return current_water,current_coffee,current_milk
-        elif order == "latte":
-            current_water -= 200
-            current_coffee -= 24
-            current_milk -= 150
-            return current_water, current_coffee, current_milk
-        elif order == "cappuccino":
-            current_water -= 250
-            current_coffee -= 24
-            current_milk -= 100
-            return current_water,current_coffee,current_milk
-        else:
-            return -1
+def make_coffee(order):
+        for item in MENU[order]["ingredients"]:
+            resources[item] -= MENU[order]["ingredients"][item]
 def check_transaction(order,quater_given,dimes_given,nickel_given,pennies_given):
     if order == "espresso":
        if coin_process(quater_given=quarters,dimes_given=dimes,nickel_given=nickels,pennies_given=pennies) >= MENU["espresso"]["cost"] :
@@ -105,9 +84,12 @@ machineOn = True
 while machineOn:
     user_order = input("What would you like? (espresso/latte/cappuccino):")
     if user_order == "report":
-        print_report(current_water=water, current_milk=milk, current_coffee=coffee, current_money=profit)
+        print_report()
+    elif user_order == "off":
+        machineOn = False
     else:
-        if check_resources(current_water=water,current_milk=milk, current_coffee=coffee,order=user_order):
+        drink = MENU[user_order]
+        if check_resources(order=drink):
             print("Please insert coins")
             quarters = int(input("How many quarters?: "))
             dimes = int(input("How many dimes?: "))
@@ -115,15 +97,11 @@ while machineOn:
             pennies = int(input("How many pennies?: "))
             if check_transaction(user_order,quarters,dimes,nickels,pennies):
                 profit += MENU[user_order]["cost"]
-                water,coffee,milk = make_coffee(current_water=water,current_milk= milk,current_coffee= coffee,order= user_order)
+                make_coffee(order= user_order)
                 print("Thank you for your payment!")
                 change =  coin_process(quarters,dimes,nickels,pennies) - MENU[user_order]["cost"]
                 print(f"Here is your {user_order} Enjoy!")
                 print(f"here is your change {round(change,2)}")
             else:
-                print("Sorry, you do not have enough cash!")
+                print("Sorry that's not enough money. Money refunded.")
                 continue
-        else:
-            print("Insufficient resources")
-            print_report(current_water=water, current_milk=milk, current_coffee=coffee, current_money=profit)
-            machineOn = False
